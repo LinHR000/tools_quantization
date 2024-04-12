@@ -1,0 +1,14 @@
+*.pt
+*~
+*.safetensors
+*.err
+*.out
+*.json
+__pycache__/
+#*
+cache/
+*/build/
+*/dist/
+*/.eggs/
+*.egg-info/
+datasets/

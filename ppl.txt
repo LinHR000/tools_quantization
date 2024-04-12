@@ -1,0 +1,5 @@
+Wiki2 ppl
+Llama-2-13B : 4.8837
+gptq-w4a16-sym-g128    quant time consumption
+awq-w4a16-sym-g128     quant time consumption
+fp8-e5m2 transform directily
