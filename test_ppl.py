@@ -12,7 +12,7 @@ from pathlib import Path
 from transformers import AutoTokenizer, AutoConfig, AutoModelForCausalLM
 
 seqlen = 2048
-model_path = '/mnt/data/linhaoran/models/Llama-2-13b'
+model_path = '/mnt/data/linhaoran/models/Llama-2-13b-awq-w4a16'
 seed = 2
 config = AutoConfig.from_pretrained(model_path, trust_remote_code=True)
 if hasattr(config, 'quantization_config'):

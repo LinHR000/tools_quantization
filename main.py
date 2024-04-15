@@ -5,6 +5,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer,AutoConfig
 from fp8_e5m2 import FakeQuantFp8
 from eval_ppl import llama_eval
 from datautils import get_loaders
+from logger import logger
 parser = argparse.ArgumentParser()
 # =============================模型输入输出参数=============================================================================================================
 parser.add_argument("--model_path", type=str, default='/mnt/data/linhaoran/models/Llama-2-13b', help="model name of model path") 
@@ -28,6 +29,7 @@ parser.add_argument("--wbits", type=int, default=8)
 parser.add_argument("--abits", type=int, default=8)
 args = parser.parse_args()
 args.eval_ppl = True
+args.quant_dtype = 'fp8_e4m3'
 args.save_path = args.model_path + "-" + args.quant_dtype + "-" + args.quant_mode
 # 获取模型名称
 config = AutoConfig.from_pretrained(args.model_path)
@@ -35,14 +37,13 @@ model_name = config._name_or_path.split("/")[-1]
 traindataset, testenc = None,None
 
 model = AutoModelForCausalLM.from_pretrained(args.model_path,trust_remote_code=True,torch_dtype=torch.float16,device_map='cpu')
-if args.quant_dtype == 'fp8_e5m2':
-    if args.quant_mode == 'naive':
-        quant_instance = FakeQuantFp8(model,args.quant_dtype,device=args.dev)
-    pass
+if args.quant_mode == 'naive':
+    quant_instance = FakeQuantFp8(model,args.quant_dtype,device=args.dev)
 model = quant_instance.quantize()
 tokenizer = AutoTokenizer.from_pretrained(args.model_path)
 tokenizer.save_pretrained(args.save_path)
 model.save_pretrained(args.save_path)
+logger.info("model has been saved to %s",args.save_path)
 
 if args.eval_ppl:
     if testenc is None:

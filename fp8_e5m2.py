@@ -19,7 +19,7 @@ class FakeQuantFp8(object):
         for name,module in tqdm(self.model.named_modules()):
             if isinstance(module,nn.Linear) and 'lm_head' not in name:
                 tmp = torch.zeros_like(module.weight.data).to(self.device)
-                fake_fp8quant_tools.fake_quant_fp8_e5m2(module.weight.data.to(self.device), tmp)
+                fake_fp8quant_tools.fake_quant_fp8(module.weight.data.to(self.device), tmp,self.dtype)
                 module.weight.data.copy_(tmp.cpu())
         return self.model
         
