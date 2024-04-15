@@ -1,7 +1,11 @@
 import torch
 from tqdm import tqdm
 
-def get_models(model_path, arch,quant_dtype,sm='80'):
+def get_models(model_path, arch,quant_dtype,sm='80',quant_mode='naive'):
+    if quant_mode == 'gptq':
+        from auto_gptq import AutoGPTQForCausalLM
+        model = AutoGPTQForCausalLM.from_pretrained(model_path,trust_remote_code=True,torch_dtype=torch.float16,device_map='cpu')
+        return model
     if sm == '80':
         if "Llama-2" in arch:
             from models_te.modeling_llama import LlamaForCausalLM

@@ -9,12 +9,12 @@ from logger import logger
 from model_utils import get_models,replace_modules
 parser = argparse.ArgumentParser()
 # =============================模型输入输出参数=============================================================================================================
-# parser.add_argument("--model_path", type=str, default='/mnt/data/linhaoran/models/Llama-2-13b', help="model name of model path") 
-parser.add_argument("--model_path", type=str, default='/mnt/project/skyllm/linhaoran/models/Llama-2-13b', help="model name of model path") 
+parser.add_argument("--model_path", type=str, default='/mnt/data/linhaoran/models/Llama-2-13b', help="model name of model path") 
+# parser.add_argument("--model_path", type=str, default='/mnt/project/skyllm/linhaoran/models/Llama-2-13b', help="model name of model path") 
 parser.add_argument("--save_path", default="/mnt/data/linhaoran/models/Llama-2-13b-fp8-e5m2-navie", type=str, help="direction of logging file")
 parser.add_argument("--quant_dtype", default="fp8_e5m2", type=str, help="direction of logging file")
 parser.add_argument("--sm", default="89", type=str, help="direction of logging file")
-parser.add_argument("--quant_mode", default="naive", type=str, help="direction of logging file")
+parser.add_argument("--quant_mode", default="gptq", type=str, choices=['naive','gptq'], help="direction of logging file")
 parser.add_argument("--calib_dataset",type=str,default="wikitext2",
     choices=["wikitext2", "ptb", "c4", "mix","pile"],
     help="Where to extract calibration data from.",
@@ -46,10 +46,12 @@ logger.info(f"activation : {args.abits} bits, quantize dtype : {args.quant_dtype
 config = AutoConfig.from_pretrained(args.model_path,trust_remote_code=True)
 model_name = config._name_or_path.split("/")[-1]
 traindataset, testenc = None,None
-model = get_models(args.model_path,model_name,args.quant_dtype)
+model = get_models(args.model_path,model_name,args.quant_dtype,args.quant_mode)
 if args.quant_mode == 'naive':
     quant_instance = FakeQuantFp8(model,args.quant_dtype,device=args.dev,sm=args.sm)
-model = quant_instance.quantize()
+    model = quant_instance.quantize()
+else:
+    model.quantize()
 replace_modules(model,model_name,args.quant_dtype,config,args.sm)
 tokenizer = AutoTokenizer.from_pretrained(args.model_path)
 # tokenizer.save_pretrained(args.save_path)
