@@ -2,7 +2,7 @@ import os
 import torch
 import argparse
 from transformers import AutoTokenizer,AutoConfig
-from fp8_e5m2 import FakeQuantFp8
+from fp8_quantize import FakeQuantFp8
 from eval_ppl import llama_eval
 from datautils import get_loaders
 from logger import logger
