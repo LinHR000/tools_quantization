@@ -6,16 +6,20 @@ from tqdm import tqdm
 from logger import logger
 
 class FakeQuantFp8(object):
-    def __init__(self,model,dtype,device):
+    def __init__(self,model,dtype,device,sm='80'):
         self.model = model
         self.dtype = dtype
         self.device = device
         assert dtype in ['fp8_e5m2','fp8_e4m3']
         assert 'cuda' in self.device, '量化需要再GPU进行，请指定GPU设备'
+        self.sm = sm
 
     def quantize(self):
         if self.dtype == 'fp8_e4m3':
             logger.warning("FP16 直接转换到fp8 e4m3可能引起极大的精度损失，请谨慎使用")
+        if self.sm == '89' or self.sm >= '90':
+            logger.warning("SM=89, 默认使用Transformer_Engine进行FP8转换")
+            return self.model
         for name,module in tqdm(self.model.named_modules()):
             if isinstance(module,nn.Linear) and 'lm_head' not in name:
                 tmp = torch.zeros_like(module.weight.data).to(self.device)

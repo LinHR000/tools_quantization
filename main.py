@@ -1,16 +1,19 @@
 import os
 import torch
 import argparse
-from transformers import AutoModelForCausalLM, AutoTokenizer,AutoConfig
+from transformers import AutoTokenizer,AutoConfig
 from fp8_e5m2 import FakeQuantFp8
 from eval_ppl import llama_eval
 from datautils import get_loaders
 from logger import logger
+from model_utils import get_models,replace_modules
 parser = argparse.ArgumentParser()
 # =============================模型输入输出参数=============================================================================================================
-parser.add_argument("--model_path", type=str, default='/mnt/data/linhaoran/models/Llama-2-13b', help="model name of model path") 
+# parser.add_argument("--model_path", type=str, default='/mnt/data/linhaoran/models/Llama-2-13b', help="model name of model path") 
+parser.add_argument("--model_path", type=str, default='/mnt/project/skyllm/linhaoran/models/Llama-2-13b', help="model name of model path") 
 parser.add_argument("--save_path", default="/mnt/data/linhaoran/models/Llama-2-13b-fp8-e5m2-navie", type=str, help="direction of logging file")
 parser.add_argument("--quant_dtype", default="fp8_e5m2", type=str, help="direction of logging file")
+parser.add_argument("--sm", default="89", type=str, help="direction of logging file")
 parser.add_argument("--quant_mode", default="naive", type=str, help="direction of logging file")
 parser.add_argument("--calib_dataset",type=str,default="wikitext2",
     choices=["wikitext2", "ptb", "c4", "mix","pile"],
@@ -29,21 +32,29 @@ parser.add_argument("--wbits", type=int, default=8)
 parser.add_argument("--abits", type=int, default=8)
 args = parser.parse_args()
 args.eval_ppl = True
-args.quant_dtype = 'fp8_e4m3'
+args.quant_dtype = 'fp8_e5m2'
 args.save_path = args.model_path + "-" + args.quant_dtype + "-" + args.quant_mode
+
+
+logger.info("#"*20+"量化参数设置"+"#"*20)
+w_dtype = "int4" if args.wbits == 4 else args.quant_dtype
+logger.info(f"weight     : {args.wbits} bits, quantize dtype : {w_dtype}")
+logger.info(f"activation : {args.abits} bits, quantize dtype : {args.quant_dtype}")
+
+
 # 获取模型名称
-config = AutoConfig.from_pretrained(args.model_path)
+config = AutoConfig.from_pretrained(args.model_path,trust_remote_code=True)
 model_name = config._name_or_path.split("/")[-1]
 traindataset, testenc = None,None
-
-model = AutoModelForCausalLM.from_pretrained(args.model_path,trust_remote_code=True,torch_dtype=torch.float16,device_map='cpu')
+model = get_models(args.model_path,model_name,args.quant_dtype)
 if args.quant_mode == 'naive':
-    quant_instance = FakeQuantFp8(model,args.quant_dtype,device=args.dev)
+    quant_instance = FakeQuantFp8(model,args.quant_dtype,device=args.dev,sm=args.sm)
 model = quant_instance.quantize()
+replace_modules(model,model_name,args.quant_dtype,config,args.sm)
 tokenizer = AutoTokenizer.from_pretrained(args.model_path)
-tokenizer.save_pretrained(args.save_path)
-model.save_pretrained(args.save_path)
-logger.info("model has been saved to %s",args.save_path)
+# tokenizer.save_pretrained(args.save_path)
+# model.save_pretrained(args.save_path)
+# logger.info("model has been saved to %s",args.save_path)
 
 if args.eval_ppl:
     if testenc is None:

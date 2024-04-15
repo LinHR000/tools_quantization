@@ -7,6 +7,7 @@ import random
 import pickle
 import os
 import json
+from logger import logger
 current_directory = os.getcwd()
 def set_seed(seed):
     np.random.seed(seed)
@@ -93,7 +94,7 @@ def get_wikitext2(nsamples, seed, seqlen,model):
     return trainloader, devloader, testenc
 """
 def get_wikitext2(nsamples, seed, seqlen, model):
-    print("get_wikitext2")
+    logger.info("get_wikitext2")
     tokenizer = AutoTokenizer.from_pretrained(model, use_fast=False,trust_remote_code=True)
     if os.path.isfile(os.path.join(current_directory, 'datasets/wiki_train.json')):
         with open(os.path.join(current_directory,"datasets/wiki_train.json"),'r') as r:
