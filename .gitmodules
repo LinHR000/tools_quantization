@@ -1,0 +1,9 @@
+[submodule "3rd_qtools/skywork-omniquant"]
+	path = 3rd_qtools/skywork-omniquant
+	url = https://git.singularity-ai.com/haoran.lin/omniquant-skywork.git
+[submodule "3rd_qtools/skywork-autogptq"]
+	path = 3rd_qtools/skywork-autogptq
+	url = https://git.singularity-ai.com/haoran.lin/skywork-aotogptq.git
+[submodule "3rd_qtools/skywork-autoawq"]
+	path = 3rd_qtools/skywork-autoawq
+	url = https://git.singularity-ai.com/haoran.lin/skywork-autoawq.git
